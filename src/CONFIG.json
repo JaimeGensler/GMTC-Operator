@@ -1,0 +1,6 @@
+{
+	"PERMITTED_TEXT_CHANNEL": "operator",
+	"LOBBY_VOICE_CHANNEL": "WAITING ROOM",
+	"REQUIRED_QUEUE_ROLE": "Phone Answerer",
+	"REQUIRED_START_ROLE": "Head Master"
+}

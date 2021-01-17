@@ -1,1 +1,3 @@
-export default {};
+import Operator from './Operator';
+
+new Operator();
