@@ -1,3 +1,6 @@
 import Operator from './Operator';
+import * as dotenv from 'dotenv';
 
-new Operator();
+dotenv.config();
+
+new Operator(process.env.BOT_TOKEN);
