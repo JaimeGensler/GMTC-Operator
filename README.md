@@ -17,7 +17,5 @@ room" voice channel. The bot places these players "in queue", and tracks their
 position. When a phone answerer is ready to take the call, they can type !phone
 (or !answer, !next) in the operator channel to have the first player in queue
 moved to their voice channel. Trivia Players are removed from queue if they
-leave the waiting room for any reason.
-
-Trivia Masters also have the ability to !clear the waiting room, and check the
-bot's status.
+leave the waiting room for any reason. Trivia Masters also have the ability to
+!clear the waiting room, and check the bot's !status.

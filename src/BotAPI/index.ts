@@ -21,15 +21,17 @@ export default class BaseBot {
 		eventType: string,
 		listener: (...args: any[]) => void,
 	) {
-		this._client.on(eventType, listener.bind(this));
+		this._client.addListener(eventType, listener.bind(this));
+	}
+	protected removeListener(
+		eventType: string,
+		listener: (...args: any[]) => void,
+	) {
+		this._client.removeListener(eventType, listener.bind(this));
 	}
 
 	private start() {
 		this.log('Bot ready.');
-		// const DEBUG_startup = this._client.channels.cache.find(
-		// 	ch => ch instanceof Discord.TextChannel && ch.name === 'operator',
-		// ) as Discord.TextChannel;
-		// DEBUG_startup.send('DEBUG --- Bot started.');
 
 		this._client.on('message', this.watchMessages.bind(this));
 	}

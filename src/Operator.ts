@@ -14,15 +14,17 @@ export default class OperatorBot extends BaseBot {
 		transfersHandled: 0,
 	};
 
-	private enable() {
-		this.status.isActive = true;
-		super.addListener('voiceStateUpdate', this.watchVoiceState);
-	}
 	@Command('start')
 	@AuthHeadTM
 	private startCompetition() {
 		this.enable();
-		return 'Starting competition.';
+		return 'Starting competition! Type **!help** for a list of commands.';
+	}
+	@Command('stop')
+	@AuthHeadTM
+	private stopCompetition() {
+		this.disable();
+		return 'Shutting down bot! Thanks for playing!';
 	}
 
 	@Command('status')
@@ -130,5 +132,14 @@ export default class OperatorBot extends BaseBot {
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
 		}
+	}
+
+	private enable() {
+		this.status.isActive = true;
+		super.addListener('voiceStateUpdate', this.watchVoiceState);
+	}
+	private disable() {
+		this.status.isActive = false;
+		super.removeListener('voiceStateUpdate', this.watchVoiceState);
 	}
 }

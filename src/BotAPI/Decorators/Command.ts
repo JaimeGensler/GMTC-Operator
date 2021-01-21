@@ -15,6 +15,9 @@ export default function Command(trigger: string) {
 		}
 
 		const method: Function = descriptor.value;
+		if (commandName in prototype) {
+			throw new Error('Duplicate command name!');
+		}
 
 		//@ts-ignore
 		prototype[commandName] = function (...args: any[]) {
