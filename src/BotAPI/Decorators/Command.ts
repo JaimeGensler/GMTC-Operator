@@ -21,8 +21,8 @@ export default function Command(...triggers: string[]) {
 
 		triggers.forEach(trigger => {
 			//@ts-ignore
-			prototype[`!${trigger}`] = function (message: Discord.Message) {
-				return method.apply(this, [message]);
+			prototype[`!${trigger}`] = function (...args: any[]) {
+				return method.apply(this, args);
 			};
 		});
 

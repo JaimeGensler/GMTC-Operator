@@ -1,6 +1,4 @@
-import { GuildMember } from 'discord.js';
-
-export default class Queue<K extends string | number | Symbol, T> {
+export default class Queue<K extends string | number | Symbol, T extends any> {
 	private _data: Map<K, T> = new Map();
 
 	public constructor() {}
@@ -35,21 +33,11 @@ export default class Queue<K extends string | number | Symbol, T> {
 		return this._data.size === 0;
 	}
 
-	public DEBUG_STRING(): string {
-		let entries: string[] = [];
-		this._data.forEach(member => {
-			entries.push(((member as unknown) as GuildMember).displayName);
-		});
-		return `DEBUG --- \n${entries.join('\n')}`;
-	}
-
-	public map(callback: (key: K, value: T, position: number) => any): any[] {
-		const result: any[] = [];
+	public forEach(callback: (entry: [K, T], position: number) => any): void {
 		let i = 0;
 		this._data.forEach((value, key) => {
-			result.push(callback(key, value, i));
+			callback([key, value], i);
 			i++;
 		});
-		return result;
 	}
 }

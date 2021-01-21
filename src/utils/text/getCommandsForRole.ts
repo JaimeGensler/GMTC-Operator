@@ -1,12 +1,6 @@
-import Discord from 'discord.js';
+import { GuildMember } from 'discord.js';
+import { isHeadMaster, isTriviaMaster, isPhoneAnswerer } from '../roles/roles';
 import greet from './greet';
-
-const isRole = (roleName: string) => (member: Discord.GuildMember | null) => {
-	return !!member?.roles.cache.find(r => r.name === roleName);
-};
-const isHeadMaster = isRole('Head Master');
-const isTriviaMaster = isRole('Trivia Master');
-const isPhoneAnswerer = isRole('Phone Answerer');
 
 const commandLookup = {
 	HM: [
@@ -15,6 +9,7 @@ const commandLookup = {
 	],
 	TM: [
 		' - **!status** - Get the current status of the bot. This includes active/inactive state, queue info, and lifetime stats.',
+		' - **!clear** - Clears all users out of the Waiting Room.',
 	],
 	PA: [
 		' - **!phone** (*also **!next** and **!answer***) - Moves the next player in queue (*if there is one*) into your call.',
@@ -22,8 +17,8 @@ const commandLookup = {
 	],
 };
 
-export default function getCommandsForRole(member: Discord.GuildMember | null) {
-	const is = {
+export default function getCommandsForRole(member: GuildMember | null) {
+	const isRole = {
 		HM: isHeadMaster(member),
 		TM: isTriviaMaster(member),
 		PA: isPhoneAnswerer(member),
@@ -33,13 +28,13 @@ export default function getCommandsForRole(member: Discord.GuildMember | null) {
 			member,
 		)} I'm OperatorBot! Here are the commands you have access to:`,
 	];
-	if (is.HM) {
+	if (isRole.HM) {
 		roleTexts.push(...commandLookup.HM);
 	}
-	if (is.TM || is.HM) {
+	if (isRole.TM || isRole.HM) {
 		roleTexts.push(...commandLookup.TM);
 	}
-	if (is.PA || is.TM || is.HM) {
+	if (isRole.PA || isRole.TM || isRole.HM) {
 		roleTexts.push(...commandLookup.PA);
 	}
 	return roleTexts.join('\n');

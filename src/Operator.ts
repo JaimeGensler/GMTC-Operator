@@ -1,12 +1,8 @@
 import Discord from 'discord.js';
 import BaseBot from './BotAPI';
-import {
-	Command,
-	AuthTM,
-	AuthHM,
-	AuthPhoneAnswerer,
-} from './BotAPI/Decorators';
+import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
+import { AuthTM, AuthHeadTM, AuthPhoneAnswerer } from './utils/roles/AuthRoles';
 import getCommandsForRole from './utils/text/getCommandsForRole';
 import Queue from './utils/Queue';
 import waitingRoom from './utils/waitingRoom';
@@ -19,7 +15,7 @@ export default class OperatorBot extends BaseBot {
 	};
 
 	@Command('start')
-	@AuthHM
+	@AuthHeadTM
 	private startCompetition() {
 		this.status.isActive = true;
 		super.addListener('voiceStateUpdate', this.watchVoiceState);
@@ -50,35 +46,71 @@ export default class OperatorBot extends BaseBot {
 		if (!member) return;
 		if (!this.status.isActive) return;
 		if (this.queue.length === 0) return 'Nobody in queue right now.';
+		if (
+			!member.voice.channel ||
+			!/^Phone \d\d?$/.test(member.voice.channel.name)
+		) {
+			return 'Sorry! You need to be in a phone room to use that command.';
+		}
+		if (member.voice.channel.full) {
+			return 'Sorry! Your phone line is in use right now!';
+		}
 
 		const firstInQueue = this.queue.first()!;
-		firstInQueue.voice.setChannel(
-			member.voice.channelID,
-			'Moved to phone room by OperatorBot.',
-		);
-		return;
+		this.log(`Connecting player to ${member.voice.channel.name}.`);
+		firstInQueue.voice
+			.setChannel(
+				member.voice.channelID,
+				'Moved to phone room by OperatorBot.',
+			)
+			.catch(this.logError);
+		this.status.transfersHandled++;
+
+		return `Connecting ${
+			firstInQueue.nickname ?? firstInQueue.displayName
+		} to ${member.voice.channel.name}.`;
 	}
 
 	@Command('queue', 'q')
 	@AuthPhoneAnswerer
-	private getQueueInfo({ content, member }: Discord.Message) {
+	private getQueueInfo(_: any, args: string[]) {
 		if (!this.status.isActive) return;
 
 		const qL = this.queue.length;
-		let message = `There ${isAre(qL)} **${qL} ${personPeople(
-			qL,
-		)}** in queue.`;
+		const response = [
+			`There ${isAre(qL)} **${qL} ${personPeople(qL)}** in queue.`,
+		];
+		if (qL > 0 && (args.includes('list') || args.includes('li'))) {
+			this.queue.forEach(([, member], i) => {
+				response.push(
+					`${i + 1} - ${member.nickname ?? member.displayName}`,
+				);
+			});
+		}
 
-		// if (content.includes(' list')) {
-		// 	message += '\n';
-		// 	message += this.queue
-		// 		.map(
-		// 			(_, val, i) =>
-		// 				`${i + 1} - ${val?.nickname ?? val?.displayName}`,
-		// 		)
-		// 		.join('\n');
-		// }
-		return message;
+		return response.join('\n');
+	}
+
+	@Command('clear')
+	@AuthTM
+	private clearWaitingRoom(message: Discord.Message) {
+		if (!this.status.isActive) return;
+		if (!message.guild) return;
+
+		const waitingRoom = message.guild.channels.cache.find(
+			channel =>
+				channel instanceof Discord.VoiceChannel &&
+				channel.name === 'WAITING ROOM',
+		) as Discord.VoiceChannel | undefined;
+		if (!waitingRoom) {
+			return "Uh oh! Stinky! I couldn't find the waiting room :(";
+		}
+		waitingRoom.members.forEach(member =>
+			member.voice
+				.setChannel(null, 'Waiting Room cleared by Operator.')
+				.catch(this.logError),
+		);
+		return 'Cleared waiting room!';
 	}
 
 	private watchVoiceState(
