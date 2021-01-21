@@ -140,6 +140,7 @@ export default class OperatorBot extends BaseBot {
 	}
 	private disable() {
 		this.status.isActive = false;
+		this.queue.empty();
 		super.removeListener('voiceStateUpdate', this.watchVoiceState);
 	}
 }
