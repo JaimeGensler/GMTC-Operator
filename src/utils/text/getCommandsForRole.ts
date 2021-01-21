@@ -1,5 +1,5 @@
 import { GuildMember } from 'discord.js';
-import { isHeadMaster, isTriviaMaster, isPhoneAnswerer } from '../roles/roles';
+import { isHeadTriviaMaster, isTriviaMaster, isPhoneAnswerer } from '../roles';
 import greet from './greet';
 
 const commandLookup = {
@@ -18,8 +18,8 @@ const commandLookup = {
 };
 
 export default function getCommandsForRole(member: GuildMember | null) {
-	const isRole = {
-		HM: isHeadMaster(member),
+	const hasRole = {
+		HM: isHeadTriviaMaster(member),
 		TM: isTriviaMaster(member),
 		PA: isPhoneAnswerer(member),
 	};
@@ -28,13 +28,13 @@ export default function getCommandsForRole(member: GuildMember | null) {
 			member,
 		)} I'm OperatorBot! Here are the commands you have access to:`,
 	];
-	if (isRole.HM) {
+	if (hasRole.HM) {
 		roleTexts.push(...commandLookup.HM);
 	}
-	if (isRole.TM || isRole.HM) {
+	if (hasRole.TM || hasRole.HM) {
 		roleTexts.push(...commandLookup.TM);
 	}
-	if (isRole.PA || isRole.TM || isRole.HM) {
+	if (hasRole.PA || hasRole.TM || hasRole.HM) {
 		roleTexts.push(...commandLookup.PA);
 	}
 	return roleTexts.join('\n');
