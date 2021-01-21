@@ -2,11 +2,8 @@ import Discord from 'discord.js';
 import BotBase from '..';
 
 // Instance Method Decorator
-export default function Command(...triggers: string[]) {
-	if (triggers.length === 0) {
-		throw new Error('Commands must have at least one trigger.');
-	}
-	const primaryTrigger = `!${triggers[0]}`;
+export default function Command(trigger: string) {
+	const commandName = `!${trigger}`;
 
 	return function (
 		prototype: any,
@@ -19,27 +16,23 @@ export default function Command(...triggers: string[]) {
 
 		const method: Function = descriptor.value;
 
-		triggers.forEach(trigger => {
-			//@ts-ignore
-			prototype[`!${trigger}`] = function (...args: any[]) {
-				return method.apply(this, args);
-			};
-		});
+		//@ts-ignore
+		prototype[commandName] = function (...args: any[]) {
+			return method.apply(this, args);
+		};
 
 		// This is the solution I have for now, maybe there's a better one
 		return new Proxy(descriptor, {
-			get(descProxy, key) {
-				return key === 'value'
+			get(descProxy, property) {
+				return property === 'value'
 					? //@ts-ignore
-					  prototype[primaryTrigger]
+					  prototype[commandName]
 					: //@ts-ignore
-					  descProxy[key];
+					  descProxy[property];
 			},
 			set(descProxy, property, value) {
-				triggers.forEach(trigger => {
-					//@ts-ignore
-					prototype[`!${trigger}`] = value;
-				});
+				//@ts-ignore
+				prototype[commandName] = value;
 				return true;
 			},
 		});

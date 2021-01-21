@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import BaseBot from './BotAPI';
-import { Command } from './BotAPI/Decorators';
+import { Command, Pseudonym } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
 import { AuthTM, AuthHeadTM, AuthPhoneAnswerer } from './utils/roles/AuthRoles';
 import getCommandsForRole from './utils/text/getCommandsForRole';
@@ -14,11 +14,14 @@ export default class OperatorBot extends BaseBot {
 		transfersHandled: 0,
 	};
 
+	private enable() {
+		this.status.isActive = true;
+		super.addListener('voiceStateUpdate', this.watchVoiceState);
+	}
 	@Command('start')
 	@AuthHeadTM
 	private startCompetition() {
-		this.status.isActive = true;
-		super.addListener('voiceStateUpdate', this.watchVoiceState);
+		this.enable();
 		return 'Starting competition.';
 	}
 
@@ -40,7 +43,8 @@ export default class OperatorBot extends BaseBot {
 		return getCommandsForRole(member);
 	}
 
-	@Command('phone', 'next', 'answer')
+	@Command('phone')
+	@Pseudonym('next', 'answer')
 	@AuthPhoneAnswerer
 	private answerPhone({ member }: Discord.Message) {
 		if (!member) return;
@@ -71,7 +75,8 @@ export default class OperatorBot extends BaseBot {
 		} to ${member.voice.channel.name}.`;
 	}
 
-	@Command('queue', 'q')
+	@Command('queue')
+	@Pseudonym('q')
 	@AuthPhoneAnswerer
 	private getQueueInfo(_: any, args: string[]) {
 		if (!this.status.isActive) return;
