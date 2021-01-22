@@ -135,10 +135,12 @@ export default class OperatorBot extends BaseBot {
 	}
 
 	private enable() {
+		if (this.status.isActive) return;
 		this.status.isActive = true;
 		super.addListener('voiceStateUpdate', this.watchVoiceState);
 	}
 	private disable() {
+		if (!this.status.isActive) return;
 		this.status.isActive = false;
 		this.queue.empty();
 		super.removeListener('voiceStateUpdate', this.watchVoiceState);
