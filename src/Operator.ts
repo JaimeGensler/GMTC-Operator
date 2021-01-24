@@ -10,21 +10,20 @@ import waitingRoom from './utils/waitingRoom';
 export default class OperatorBot extends BaseBot {
 	private readonly queue: Queue<string, Discord.GuildMember> = new Queue();
 	private readonly status = {
-		isActive: false,
 		transfersHandled: 0,
 	};
 
-	@Command('start')
-	@AuthHeadTM
-	private startCompetition() {
-		this.enable();
-		return 'Starting competition! Type **!help** for a list of commands.';
+	public constructor(token: string | undefined) {
+		super(token);
+		super.addListener('voiceStateUpdate', this.watchVoiceState);
 	}
-	@Command('stop')
+
+	@Command('reset')
 	@AuthHeadTM
-	private stopCompetition() {
-		this.disable();
-		return 'Shutting down bot! Thanks for playing!';
+	private resetBot(m: Discord.Message) {
+		this.status.transfersHandled = 0;
+		this.queue.empty();
+		this.clearWaitingRoom(m);
 	}
 
 	@Command('status')
@@ -34,7 +33,6 @@ export default class OperatorBot extends BaseBot {
 		return `${greet(
 			member,
 		)} I'm doing great, thanks for asking! Here's what's going on:
-		I am currently: **${this.status.isActive ? 'ACTIVE' : 'WAITING TO !START'}.**
 		I have handled **${this.status.transfersHandled} transfers.**
 		There ${isAre(qL)} currently **${qL} ${personPeople(qL)} in queue.**`;
 	}
@@ -50,8 +48,7 @@ export default class OperatorBot extends BaseBot {
 	@AuthPhoneAnswerer
 	private answerPhone({ member }: Discord.Message) {
 		if (!member) return;
-		if (!this.status.isActive) return;
-		if (this.queue.length === 0) return 'Nobody in queue right now.';
+		if (this.queue.length === 0) return 'Nobody in queue right now!';
 		if (
 			!member.voice.channel ||
 			!/^Phone \d\d?$/.test(member.voice.channel.name)
@@ -81,8 +78,6 @@ export default class OperatorBot extends BaseBot {
 	@Pseudonym('q')
 	@AuthPhoneAnswerer
 	private getQueueInfo(_: any, args: string[]) {
-		if (!this.status.isActive) return;
-
 		const qL = this.queue.length;
 		const response = [
 			`There ${isAre(qL)} **${qL} ${personPeople(qL)}** in queue.`,
@@ -98,10 +93,14 @@ export default class OperatorBot extends BaseBot {
 		return response.join('\n');
 	}
 
+	@Command('qlist')
+	private getQueueInfoShorthand(message: Discord.Message) {
+		this.getQueueInfo(message, ['list']);
+	}
+
 	@Command('clear')
 	@AuthTM
 	private clearWaitingRoom(message: Discord.Message) {
-		if (!this.status.isActive) return;
 		if (!message.guild) return;
 
 		const waitingRoom = message.guild.channels.cache.find(
@@ -132,17 +131,5 @@ export default class OperatorBot extends BaseBot {
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
 		}
-	}
-
-	private enable() {
-		if (this.status.isActive) return;
-		this.status.isActive = true;
-		super.addListener('voiceStateUpdate', this.watchVoiceState);
-	}
-	private disable() {
-		if (!this.status.isActive) return;
-		this.status.isActive = false;
-		this.queue.empty();
-		super.removeListener('voiceStateUpdate', this.watchVoiceState);
 	}
 }
