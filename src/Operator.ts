@@ -16,6 +16,7 @@ export default class OperatorBot extends BaseBot {
 	public constructor(token: string | undefined) {
 		super(token);
 		super.addListener('voiceStateUpdate', this.watchVoiceState);
+		super.onReady(this.enqueuePlayersInWaitingRoom);
 	}
 
 	@Command('reset')
@@ -94,8 +95,19 @@ export default class OperatorBot extends BaseBot {
 	}
 
 	@Command('qlist')
-	private getQueueInfoShorthand(message: Discord.Message) {
-		this.getQueueInfo(message, ['list']);
+	@AuthPhoneAnswerer
+	private getQueueInfoShorthand() {
+		// Temporary duplicate!
+		const qL = this.queue.length;
+		const response = [
+			`There ${isAre(qL)} **${qL} ${personPeople(qL)}** in queue.`,
+		];
+		this.queue.forEach(([, member], i) => {
+			response.push(
+				`${i + 1} - ${member.nickname ?? member.displayName}`,
+			);
+		});
+		return response.join('\n');
 	}
 
 	@Command('clear')
@@ -131,5 +143,32 @@ export default class OperatorBot extends BaseBot {
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
 		}
+	}
+
+	private enqueuePlayersInWaitingRoom() {
+		const gmtcGuild = this._client.guilds.cache.find(
+			guild => guild.id === '772964238376960030',
+		);
+		if (!gmtcGuild) {
+			this.log('Could not find GMTC Guild at bot startup!');
+			return;
+		}
+		const waitingRoom = gmtcGuild.channels.cache.find(
+			channel =>
+				channel instanceof Discord.VoiceChannel &&
+				channel.name === 'WAITING ROOM',
+		) as Discord.VoiceChannel | undefined;
+		if (!waitingRoom) {
+			this.log(
+				'Could not find "Waiting Room" channel to enqueue players at bot startup!',
+			);
+			return;
+		}
+		this.log(
+			`Found GMTC Guild and Waiting Room. Enqueueing ${waitingRoom.members.size} players.`,
+		);
+		waitingRoom.members.forEach(member => {
+			this.queue.enqueue(member.id, member);
+		});
 	}
 }

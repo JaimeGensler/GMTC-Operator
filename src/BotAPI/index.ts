@@ -1,7 +1,8 @@
 import Discord from 'discord.js';
 
 export default class BaseBot {
-	private readonly _client: Discord.Client = new Discord.Client();
+	protected readonly _client: Discord.Client = new Discord.Client();
+	protected readonly _readyListeners: Array<() => void> = [];
 
 	public constructor(token: string | undefined) {
 		this.log('Starting bot.');
@@ -15,6 +16,10 @@ export default class BaseBot {
 			});
 
 		this._client.once('ready', this.start.bind(this));
+	}
+
+	public onReady(listener: () => void) {
+		this._readyListeners.push(listener.bind(this));
 	}
 
 	protected addListener(
@@ -32,7 +37,7 @@ export default class BaseBot {
 
 	private start() {
 		this.log('Bot ready.');
-
+		this._readyListeners.forEach(l => l());
 		this._client.on('message', this.watchMessages.bind(this));
 	}
 
