@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import BaseBot from './BotAPI';
-import { Command, Pseudonym } from './BotAPI/Decorators';
+import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
 import { AuthTM, AuthHeadTM, AuthPhoneAnswerer } from './utils/roles/AuthRoles';
 import getCommandsForRole from './utils/text/getCommandsForRole';
@@ -43,8 +43,7 @@ export default class OperatorBot extends BaseBot {
 		return getCommandsForRole(member);
 	}
 
-	@Command('phone')
-	@Pseudonym('next', 'answer')
+	@Command('phone', 'next', 'answer')
 	@AuthPhoneAnswerer
 	private answerPhone({ member }: Discord.Message) {
 		if (!member) return;
@@ -74,8 +73,7 @@ export default class OperatorBot extends BaseBot {
 		} to ${member.voice.channel.name}.`;
 	}
 
-	@Command('queue')
-	@Pseudonym('q')
+	@Command('queue', 'q')
 	@AuthPhoneAnswerer
 	private getQueueInfo(_: any, args: string[]) {
 		if (args.includes('list') || args.includes('li')) {
