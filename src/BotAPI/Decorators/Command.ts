@@ -1,43 +1,30 @@
-import Discord from 'discord.js';
 import BotBase from '..';
 
 // Instance Method Decorator
-export default function Command(trigger: string) {
-	const commandName = `!${trigger}`;
-
+export default function Command(...triggers: string[]) {
 	return function (
 		prototype: any,
 		methodName: string,
 		descriptor: PropertyDescriptor,
 	) {
 		if (!(prototype instanceof BotBase)) {
-			throw new Error();
+			throw new Error(
+				'Command decorator must only be used within an instance of BotBase',
+			);
 		}
 
-		const method: Function = descriptor.value;
-		if (commandName in prototype) {
-			throw new Error('Duplicate command name!');
+		if (prototype.commands == null) {
+			prototype.commands = {};
 		}
 
-		//@ts-ignore
-		prototype[commandName] = function (...args: any[]) {
-			return method.apply(this, args);
-		};
-
-		// This is the solution I have for now, maybe there's a better one
-		return new Proxy(descriptor, {
-			get(descProxy, property) {
-				return property === 'value'
-					? //@ts-ignore
-					  prototype[commandName]
-					: //@ts-ignore
-					  descProxy[property];
-			},
-			set(descProxy, property, value) {
-				//@ts-ignore
-				prototype[commandName] = value;
-				return true;
-			},
+		triggers.forEach(t => {
+			const cmd = `!${t}`;
+			if (cmd in prototype.commands) {
+				throw new Error(`Duplicate command name '${t}'!`);
+			}
+			prototype.commands[cmd] = methodName;
 		});
+
+		return descriptor;
 	};
 }

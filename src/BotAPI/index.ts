@@ -4,8 +4,14 @@ export default class BaseBot {
 	protected readonly _client: Discord.Client = new Discord.Client();
 	protected readonly _readyListeners: Array<() => void> = [];
 
+	// Unfortunately this can't be protected as that breaks the Command decorator.
+	commands: { [key: string]: string };
+
 	public constructor(token: string | undefined) {
 		this.log('Starting bot.');
+
+		// @ts-ignore; The Command decorator sets up the commands object.
+		this.commands = this.commands || {};
 
 		this._client
 			.login(token)
@@ -46,12 +52,10 @@ export default class BaseBot {
 
 		if (channel instanceof Discord.TextChannel && content.startsWith('!')) {
 			const [command, ...cmdArgs] = content.split(' ');
-			if (command in this) {
+			const fn = this.findCommand(command);
+			if (fn) {
 				//@ts-ignore
-				const result: string | undefined = this[command](
-					message,
-					cmdArgs,
-				);
+				const result: string | undefined = fn(message, cmdArgs);
 
 				if (result) {
 					this.log(`Received command ${command}. Sent response.`);
@@ -61,6 +65,21 @@ export default class BaseBot {
 				}
 			}
 		}
+	}
+
+	private findCommand(cmd: string): Function | null {
+		// Ensure the command we are looking for exists.
+		if (!(cmd in this.commands)) return null;
+		const fnName = this.commands[cmd];
+
+		// Ensure the function the command maps to exists.
+		if (!(fnName in this)) return null;
+		// @ts-ignore
+		const fn = this[fnName];
+
+		// Ensure the function is actually a function.
+		if (typeof fn !== 'function') return null;
+		return fn;
 	}
 
 	protected log(text: string) {

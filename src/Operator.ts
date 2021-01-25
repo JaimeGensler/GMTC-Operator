@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import BaseBot from './BotAPI';
-import { Command, Pseudonym } from './BotAPI/Decorators';
+import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
 import { AuthTM, AuthHeadTM, AuthPhoneAnswerer } from './utils/roles/AuthRoles';
 import getCommandsForRole from './utils/text/getCommandsForRole';
@@ -30,12 +30,11 @@ export default class OperatorBot extends BaseBot {
 	@Command('status')
 	@AuthTM
 	private getStatus({ member }: Discord.Message) {
-		const qL = this.queue.length;
+		const transfers = this.status.transfersHandled;
 		return `${greet(
 			member,
 		)} I'm doing great, thanks for asking! Here's what's going on:
-		I have handled **${this.status.transfersHandled} transfers.**
-		There ${isAre(qL)} currently **${qL} ${personPeople(qL)} in queue.**`;
+		I have handled **${transfers} transfers.** ${this.queueStatus()}`;
 	}
 
 	@Command('help')
@@ -44,8 +43,7 @@ export default class OperatorBot extends BaseBot {
 		return getCommandsForRole(member);
 	}
 
-	@Command('phone')
-	@Pseudonym('next', 'answer')
+	@Command('phone', 'next', 'answer')
 	@AuthPhoneAnswerer
 	private answerPhone({ member }: Discord.Message) {
 		if (!member) return;
@@ -75,33 +73,20 @@ export default class OperatorBot extends BaseBot {
 		} to ${member.voice.channel.name}.`;
 	}
 
-	@Command('queue')
-	@Pseudonym('q')
+	@Command('queue', 'q')
 	@AuthPhoneAnswerer
 	private getQueueInfo(_: any, args: string[]) {
-		const qL = this.queue.length;
-		const response = [
-			`There ${isAre(qL)} **${qL} ${personPeople(qL)}** in queue.`,
-		];
-		if (qL > 0 && (args.includes('list') || args.includes('li'))) {
-			this.queue.forEach(([, member], i) => {
-				response.push(
-					`${i + 1} - ${member.nickname ?? member.displayName}`,
-				);
-			});
+		if (args.includes('list') || args.includes('li')) {
+			return this.getQueueInfoShorthand();
+		} else {
+			return this.queueStatus();
 		}
-
-		return response.join('\n');
 	}
 
 	@Command('qlist')
 	@AuthPhoneAnswerer
 	private getQueueInfoShorthand() {
-		// Temporary duplicate!
-		const qL = this.queue.length;
-		const response = [
-			`There ${isAre(qL)} **${qL} ${personPeople(qL)}** in queue.`,
-		];
+		const response = [this.queueStatus()];
 		this.queue.forEach(([, member], i) => {
 			response.push(
 				`${i + 1} - ${member.nickname ?? member.displayName}`,
@@ -129,6 +114,13 @@ export default class OperatorBot extends BaseBot {
 				.catch(this.logError),
 		);
 		return 'Cleared waiting room!';
+	}
+
+	private queueStatus() {
+		const qL = this.queue.length;
+		return `There ${isAre(qL)} currently **${qL} ${personPeople(
+			qL,
+		)}** in the queue.`;
 	}
 
 	private watchVoiceState(
