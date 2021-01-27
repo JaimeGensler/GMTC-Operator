@@ -3,11 +3,14 @@ import BaseBot from './BotAPI';
 import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
 import { AuthTM, AuthHeadTM, AuthPhoneAnswerer } from './utils/roles/AuthRoles';
+import AuthUser from './utils/AuthUser';
 import getCommandsForRole from './utils/text/getCommandsForRole';
 import Queue from './utils/Queue';
 import waitingRoom from './utils/waitingRoom';
 
 const TriviaGuildID = '772964238376960030';
+const HelperBotID = '803028479004114974';
+
 export default class OperatorBot extends BaseBot {
 	private readonly queue: Queue<string, Discord.GuildMember> = new Queue();
 	private readonly status = {
@@ -115,6 +118,32 @@ export default class OperatorBot extends BaseBot {
 				.catch(this.logError),
 		);
 		return 'Cleared waiting room!';
+	}
+
+	@Command('su')
+	@AuthUser(HelperBotID)
+	private async su(message: Discord.Message, args: string[]) {
+		if (args.length < 2) return;
+
+		const [cmd, userid, ...cmdArgs] = args;
+
+		const guild = await this._client.guilds.fetch(TriviaGuildID);
+		if (!guild) return;
+
+		const member = await guild.members.fetch(userid);
+		if (!member) return;
+
+		let msg: string | undefined;
+		switch (cmd) {
+			case 'next':
+				msg = this.answerPhone({ member });
+				break;
+			default:
+				msg = `Invalid command ${cmd}`;
+		}
+
+		// Encode the output for easier parsing later.
+		return JSON.stringify({ src: message.id, msg });
 	}
 
 	private queueStatus() {
