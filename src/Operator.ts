@@ -174,7 +174,7 @@ export default class OperatorBot extends BaseBot {
 		}
 
 		// Encode the output for easier parsing later.
-		return JSON.stringify({ src: message.id, msg });
+		return JSON.stringify({ src: message.id, userid, msg });
 	}
 
 	private queueStatus() {
