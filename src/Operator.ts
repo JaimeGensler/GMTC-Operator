@@ -77,6 +77,34 @@ export default class OperatorBot extends BaseBot {
 		} to ${member.voice.channel.name}.`;
 	}
 
+	@Command('hangup', 'hup', 'hu')
+	@AuthPhoneAnswerer
+	private hangUp({ member }: Pick<Discord.Message, 'member'>) {
+		if (!member) return;
+		if (
+			!member.voice.channel ||
+			!/^Phone \d\d?$/.test(member.voice.channel.name)
+		) {
+			return 'Sorry! You need to be in a phone room to use that command.';
+		}
+
+		const caller = member.voice.channel.members.find(
+			m => m.id !== member.id,
+		);
+		if (!caller) {
+			return 'There is nobody on the line right now!';
+		}
+
+		caller.voice
+			.setChannel(
+				null,
+				`Hung up by ${member.nickname ?? member.displayName}`,
+			)
+			.catch(this.logError);
+
+		return `Disconnected ${caller.nickname ?? caller.displayName}.`;
+	}
+
 	@Command('queue', 'q')
 	@AuthPhoneAnswerer
 	private getQueueInfo(_: any, args: string[]) {
@@ -137,6 +165,9 @@ export default class OperatorBot extends BaseBot {
 		switch (cmd) {
 			case 'next':
 				msg = this.answerPhone({ member });
+				break;
+			case 'hup':
+				msg = this.hangUp({ member });
 				break;
 			default:
 				msg = `Invalid command ${cmd}`;
