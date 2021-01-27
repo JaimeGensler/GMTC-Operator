@@ -54,15 +54,20 @@ export default class BaseBot {
 			const [command, ...cmdArgs] = content.split(' ');
 			const fn = this.findCommand(command);
 			if (fn) {
-				//@ts-ignore
-				const result: string | undefined = fn(message, cmdArgs);
-
-				if (result) {
-					this.log(`Received command ${command}. Sent response.`);
-					channel.send(result).catch(this.logError);
-				} else {
-					this.log(`Received command ${command}. No response sent.`);
-				}
+				Promise.resolve()
+					.then(() => fn(message, cmdArgs))
+					.then((result: string | undefined) => {
+						if (result) {
+							this.log(
+								`Received command ${command}. Sent response.`,
+							);
+							channel.send(result).catch(this.logError);
+						} else {
+							this.log(
+								`Received command ${command}. No response sent.`,
+							);
+						}
+					});
 			}
 		}
 	}
