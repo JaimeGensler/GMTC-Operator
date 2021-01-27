@@ -30,7 +30,7 @@ export default class OperatorBot extends BaseBot {
 
 	@Command('status')
 	@AuthTM
-	private getStatus({ member }: Discord.Message) {
+	private getStatus({ member }: Pick<Discord.Message, 'member'>) {
 		const transfers = this.status.transfersHandled;
 		return `${greet(
 			member,
@@ -40,13 +40,13 @@ export default class OperatorBot extends BaseBot {
 
 	@Command('help')
 	@AuthPhoneAnswerer
-	private getAllCommands({ member }: Discord.Message) {
+	private getAllCommands({ member }: Pick<Discord.Message, 'member'>) {
 		return getCommandsForRole(member);
 	}
 
 	@Command('phone', 'next', 'answer')
 	@AuthPhoneAnswerer
-	private answerPhone({ member }: Discord.Message) {
+	private answerPhone({ member }: Pick<Discord.Message, 'member'>) {
 		if (!member) return;
 		if (this.queue.length === 0) return 'Nobody in queue right now!';
 		if (
