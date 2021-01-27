@@ -7,6 +7,7 @@ import getCommandsForRole from './utils/text/getCommandsForRole';
 import Queue from './utils/Queue';
 import waitingRoom from './utils/waitingRoom';
 
+const TriviaGuildID = '772964238376960030';
 export default class OperatorBot extends BaseBot {
 	private readonly queue: Queue<string, Discord.GuildMember> = new Queue();
 	private readonly status = {
@@ -139,7 +140,7 @@ export default class OperatorBot extends BaseBot {
 
 	private enqueuePlayersInWaitingRoom() {
 		const gmtcGuild = this._client.guilds.cache.find(
-			guild => guild.id === '772964238376960030',
+			guild => guild.id === TriviaGuildID,
 		);
 		if (!gmtcGuild) {
 			this.log('Could not find GMTC Guild at bot startup!');
