@@ -8,6 +8,7 @@ import getCommandsForRole from './utils/text/getCommandsForRole';
 import Queue from './utils/Queue';
 import waitingRoom from './utils/waitingRoom';
 import phoneLine from './utils/phoneLine';
+import * as roles from './utils/roles';
 
 const TriviaGuildID = '772964238376960030';
 const HelperBotID = '803028479004114974';
@@ -172,12 +173,29 @@ export default class OperatorBot extends BaseBot {
 			case 'hup':
 				msg = this.hangUp({ member });
 				break;
+			case 'info':
+				msg = this.info({ member });
 			default:
 				msg = `Invalid command ${cmd}`;
 		}
 
 		// Encode the output for easier parsing later.
 		return JSON.stringify({ src: message.id, userid, msg });
+	}
+
+	private info({ member }: Pick<Discord.Message, 'member'>) {
+		if (!member) return;
+
+		// Preferred display name
+		const name = member.nickname || member.displayName;
+		// Roles
+		const isHeadTM = roles.isHeadTriviaMaster(member);
+		const isTM = isHeadTM || roles.isTriviaMaster(member);
+		const isPA = isTM || roles.isPhoneAnswerer(member);
+		// Voice status
+		const inPhoneRoom = phoneLine.isPhoneRoom(member.voice);
+
+		return { name, isPA, isTM, isHeadTM, inPhoneRoom };
 	}
 
 	private queueStatus() {
