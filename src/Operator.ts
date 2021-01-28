@@ -164,7 +164,7 @@ export default class OperatorBot extends BaseBot {
 		const member = await guild.members.fetch(userid);
 		if (!member) return;
 
-		let msg: string | undefined;
+		let msg: any;
 		switch (cmd) {
 			case 'next':
 				msg = this.answerPhone({ member });
