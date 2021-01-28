@@ -197,6 +197,19 @@ export default class OperatorBot extends BaseBot {
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
 		}
+
+		if (phoneLine.didLeave(oldState, newState)) {
+			const user = newState.id;
+			const connected = oldState.channel!.members.map(m => m.id);
+			this.logEvent('phone-disconnected', { user, connected });
+		}
+		// Can't use `else if` because these two events are not mutually exclusive:
+		// a user could technically go from one phone line to another.
+		if (phoneLine.didJoin(oldState, newState)) {
+			const user = newState.id;
+			const connected = newState.channel!.members.map(m => m.id);
+			this.logEvent('phone-connected', { user, connected });
+		}
 	}
 
 	private async logEvent(name: string, data: any) {
