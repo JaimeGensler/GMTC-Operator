@@ -12,7 +12,6 @@ import * as roles from './utils/roles';
 
 const TriviaGuildID = '772964238376960030';
 const HelperBotID = '803028479004114974';
-const IPCChannelID = '803461225266151484';
 
 export default class OperatorBot extends BaseBot {
 	private readonly queue: Queue<string, Discord.GuildMember> = new Queue();
