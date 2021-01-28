@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { TextChannel } from 'discord.js';
 import BaseBot from './BotAPI';
 import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
@@ -10,6 +10,7 @@ import waitingRoom from './utils/waitingRoom';
 
 const TriviaGuildID = '772964238376960030';
 const HelperBotID = '803028479004114974';
+const IPCChannelID = '803461225266151484';
 
 export default class OperatorBot extends BaseBot {
 	private readonly queue: Queue<string, Discord.GuildMember> = new Queue();
@@ -196,6 +197,11 @@ export default class OperatorBot extends BaseBot {
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
 		}
+	}
+
+	private async logEvent(name: string, data: any) {
+		const channel = await this._client.channels.fetch(IPCChannelID);
+		(channel as TextChannel).send(JSON.stringify({ event: name, data }));
 	}
 
 	private enqueuePlayersInWaitingRoom() {
