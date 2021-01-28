@@ -1,3 +1,4 @@
+import { triggerAsyncId } from 'async_hooks';
 import Discord, { TextChannel } from 'discord.js';
 import * as roles from '../utils/roles';
 
@@ -65,8 +66,22 @@ export default class BaseBot {
 				roles.isTriviaMaster(message.member);
 			if (isTM) {
 				this.logEvent('tm-message', {
-					channel: channel.id,
-					author: message.author.id,
+					channel: {
+						name: channel.name,
+						id: channel.id,
+					},
+					author: {
+						name:
+							message.member?.nickname ||
+							message.member?.displayName ||
+							message.author.username,
+						id: message.author.id,
+						avatarUrl: message.author.displayAvatarURL({
+							format: 'png',
+							dynamic: true,
+							size: 512,
+						}),
+					},
 					id: message.id,
 					at: message.createdTimestamp,
 					content,
