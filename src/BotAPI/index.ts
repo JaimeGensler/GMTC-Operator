@@ -67,6 +67,8 @@ export default class BaseBot {
 				this.logEvent('tm-message', {
 					channel: channel.id,
 					author: message.author.id,
+					id: message.id,
+					at: message.createdTimestamp,
 					content,
 				});
 			}
