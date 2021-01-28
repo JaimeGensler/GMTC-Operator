@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { TextChannel } from 'discord.js';
 
 export default class BaseBot {
 	protected readonly _client: Discord.Client = new Discord.Client();
@@ -94,5 +94,9 @@ export default class BaseBot {
 	protected logError(e: Error) {
 		const timeString = new Date().toString();
 		console.error(timeString, '|', e.message);
+	}
+	protected async logEvent(name: string, data: any) {
+		const channel = await this._client.channels.fetch(IPCChannelID);
+		(channel as TextChannel).send(JSON.stringify({ event: name, data }));
 	}
 }

@@ -1,4 +1,4 @@
-import Discord, { TextChannel } from 'discord.js';
+import Discord from 'discord.js';
 import BaseBot from './BotAPI';
 import { Command } from './BotAPI/Decorators';
 import { greet, isAre, personPeople } from './utils/text';
@@ -220,11 +220,6 @@ export default class OperatorBot extends BaseBot {
 		const q: string[] = [];
 		this.queue.forEach(([id]) => q.push(id));
 		await this.logEvent('queue-update', q);
-	}
-
-	private async logEvent(name: string, data: any) {
-		const channel = await this._client.channels.fetch(IPCChannelID);
-		(channel as TextChannel).send(JSON.stringify({ event: name, data }));
 	}
 
 	private enqueuePlayersInWaitingRoom() {
