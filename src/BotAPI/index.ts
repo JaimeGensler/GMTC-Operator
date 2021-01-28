@@ -1,4 +1,12 @@
 import Discord, { TextChannel } from 'discord.js';
+import * as roles from '../utils/roles';
+
+const IPCChannelID = '803461225266151484';
+const watchedChannels = [
+	'793337837155647498',
+	'799885352327839795',
+	'803357368544788500',
+];
 
 export default class BaseBot {
 	protected readonly _client: Discord.Client = new Discord.Client();
@@ -49,8 +57,22 @@ export default class BaseBot {
 
 	private watchMessages(message: Discord.Message) {
 		const { channel, content } = message;
+		if (!(channel instanceof Discord.TextChannel)) return;
 
-		if (channel instanceof Discord.TextChannel && content.startsWith('!')) {
+		if (watchedChannels.includes(channel.id)) {
+			const isTM =
+				roles.isHeadTriviaMaster(message.member) ||
+				roles.isTriviaMaster(message.member);
+			if (isTM) {
+				this.logEvent('tm-message', {
+					channel: channel.id,
+					author: message.author.id,
+					content,
+				});
+			}
+		}
+
+		if (content.startsWith('!')) {
 			const [command, ...cmdArgs] = content.split(' ');
 			const fn = this.findCommand(command);
 			if (fn) {
