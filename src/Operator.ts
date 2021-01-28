@@ -7,6 +7,7 @@ import AuthUser from './utils/AuthUser';
 import getCommandsForRole from './utils/text/getCommandsForRole';
 import Queue from './utils/Queue';
 import waitingRoom from './utils/waitingRoom';
+import phoneLine from './utils/phoneLine';
 
 const TriviaGuildID = '772964238376960030';
 const HelperBotID = '803028479004114974';
@@ -30,6 +31,7 @@ export default class OperatorBot extends BaseBot {
 		this.status.transfersHandled = 0;
 		this.queue.empty();
 		this.clearWaitingRoom(m);
+		this.logQueue();
 	}
 
 	@Command('status')
@@ -194,8 +196,10 @@ export default class OperatorBot extends BaseBot {
 
 		if (waitingRoom.didJoin(oldState, newState)) {
 			this.queue.enqueue(member.id, member);
+			this.logQueue();
 		} else if (waitingRoom.didLeave(oldState, newState)) {
 			this.queue.dequeue(member.id);
+			this.logQueue();
 		}
 
 		if (phoneLine.didLeave(oldState, newState)) {
@@ -210,6 +214,12 @@ export default class OperatorBot extends BaseBot {
 			const connected = newState.channel!.members.map(m => m.id);
 			this.logEvent('phone-connected', { user, connected });
 		}
+	}
+
+	private async logQueue() {
+		const q: string[] = [];
+		this.queue.forEach(([id]) => q.push(id));
+		await this.logEvent('queue-update', q);
 	}
 
 	private async logEvent(name: string, data: any) {
@@ -242,5 +252,6 @@ export default class OperatorBot extends BaseBot {
 		waitingRoom.members.forEach(member => {
 			this.queue.enqueue(member.id, member);
 		});
+		this.logQueue();
 	}
 }
