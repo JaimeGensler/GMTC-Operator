@@ -16,4 +16,4 @@ function didLeave(oldState: VoiceState, newState: VoiceState): boolean {
 	return movedChannel(oldState, newState) && isPhoneRoom(oldState);
 }
 
-export default { didJoin, didLeave };
+export default { isPhoneRoom, didJoin, didLeave };
